@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE BangPatterns #-}
 module Ode.Ode where
 
 import Util.Util
@@ -12,18 +13,18 @@ class OdeSolver b where
 newtype Euler = Euler ()
 
 instance OdeSolver Euler where
-  solveStep (Euler ()) f a dt = a + fromRational (toRational dt)*(f a)
+  solveStep (Euler ()) f !a !dt = a + fromRational (toRational dt)*(f a)
 
 newtype Heun = Heun ()
 
 instance OdeSolver Heun where
-  solveStep (Heun ()) f a dt = a + fromRational (toRational dt)
+  solveStep (Heun ()) f !a !dt = a + fromRational (toRational dt)
     *(f a + f (a+fromRational (toRational dt)*(f a)))/2
 
 newtype RungeKutta = RungeKutta ()
 
 instance OdeSolver RungeKutta where
-  solveStep (RungeKutta ()) f a dt = a + dt'/6*(t1+2*t2+2*t3+t4)
+  solveStep (RungeKutta ()) f !a !dt = a + dt'/6*(t1+2*t2+2*t3+t4)
     where
       dt' = (fromRational (toRational dt))
       t1 = f a
@@ -40,6 +41,13 @@ heun = solveStep (Heun ())
 
 evolve :: (Num a, Fractional a) => (a -> a) -> Double -> Int -> a -> [a]
 evolve f dt 0 a = []
-evolve f dt x a = step:evolve f dt (x-1) step
+evolve f !dt !x !a = step:evolve f dt (x-1) step
   where
     step = solveStep (Euler ()) f a dt
+
+simulate :: (Num a, Fractional a, OdeSolver b) => b -> (a -> a) -> Double -> Double -> a -> a
+simulate s f !dt !t !a
+  | t <= 0 = a
+  | otherwise = simulate s f dt (t-dt) next
+  where
+    next = solveStep s f a dt

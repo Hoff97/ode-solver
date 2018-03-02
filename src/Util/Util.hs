@@ -4,6 +4,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Util.Util where
 
+import Data.Fixed
+
 class Fst a b c | a -> b c where
   first :: a -> b
   rest :: a -> c
@@ -62,3 +64,21 @@ instance {-# OVERLAPPABLE #-} (Fst a b c, Floating b, Floating c) => Floating a 
   acosh a = fromTuple (acosh (first a), acosh (rest a))
   asinh a = fromTuple (asinh (first a), asinh (rest a))
   atanh a = fromTuple (atanh (first a), atanh (rest a))
+
+type D3 = (Double,Double,Double)
+
+hsvToRGB :: D3 -> D3
+hsvToRGB (h,s,v) = case hi of
+  1 -> (q,v,p)
+  2 -> (p,v,t)
+  3 -> (p,q,v)
+  4 -> (t,p,v)
+  5 -> (v,p,q)
+  _ -> (v,t,p)
+  where
+    h' = (h - fromIntegral (floor $ h/360)*360)
+    hi = floor $ h'/60
+    p = v*(1-s)
+    q = v*(1-s*f)
+    t = v*(1-s*(1-f))
+    f = (h'/60-fromIntegral hi)/60

@@ -43,9 +43,9 @@ sim f dt m = solveStep (RungeKutta ()) f m (fromRational $ toRational dt)
 
 f = dpt 0.25 9.81
 
-start = (0.0,(pi,pi),(0,0))
+start = (0.0,(0,0),(0,0))
 
-prog = simulate
+prog = Graphics.Gloss.simulate
         (InWindow
                "Hello World"
                 (400, 400)
